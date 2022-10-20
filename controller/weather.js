@@ -1,6 +1,5 @@
 const express = require("express");
 const CircularJSON = require("circular-json");
-// const bodyParser = require("body-parser");
 var stringify = require("json-stringify-safe");
 
 const db = require("../database/config");
@@ -8,15 +7,16 @@ let router = express.Router();
 
 const addWeather = async (req, res) => {
   try {
-    const { city, temperature, created_at } = req.body;
+    const { city, temperature, created_at,deleted_at } = req.body;
 
     if (city === undefined || temperature === undefined) {
       res.status(400).json({ message: "Bad Request. Please fill all field." });
     }
 
-    const weather = { city, temperature, created_at };
+    const weather = { city, temperature, created_at, deleted_at };
     let createDate = new Date();
     weather.created_at = createDate;
+    weather.deleted_at = createDate;
     const connection = await db.getConnection();
     await connection.query("INSERT INTO weathers SET ?", weather);
     res.json({ message: "weather added" });
@@ -36,13 +36,23 @@ const getWeather = async (req, res) => {
 
       }
     );
-    // console.log(result)
-    // res.result;
-    // const str = CircularJSON.stringify(result);
-    // const results = JSON.parse( result );
-    // const results = JSON.parse(JSON.stringify(result))
-    // res.json(results);
-    //  res.JSON.stringify(results);
+    
+  } catch (error) {
+    res.status(500);
+    res.send(error.message);
+  }
+};
+const filterCityWeather = async (req, res) => {
+  try {
+    const connection = await db.getConnection();
+    const { city } = req.params;
+    const result = await connection.query(
+      "SELECT id,city,temperature,created_at,deleted_at FROM weathers WHERE city= ?",city,
+      (err, rows, fields) => {
+        if (!err) res.send(rows[0]);
+
+      }
+    ); 
   } catch (error) {
     res.status(500);
     res.send(error.message);
@@ -72,4 +82,5 @@ module.exports = {
   addWeather,
   getWeather,
   deleteWeather,
+  filterCityWeather,
 };

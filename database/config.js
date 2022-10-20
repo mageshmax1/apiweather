@@ -1,9 +1,6 @@
 const express = require("express");
-// const bodyparser = require("body-parser");
 var mysql = require("mysql");
 
-// var app = express();
-// app.use(bodyparser.json());
 
 const connection = mysql.createConnection({
     connectionLimit: 10,
